@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Telemed Messages</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>Telemedicine Consultation Messages</h1>
+  
+  <!-- consultation selector -->
+  <div>
+    <label>Select Consultation:</label>
+    <select id="consult-select">
+      <option value="">-- Pick one --</option>
+    </select>
+    <button id="load-btn">Load</button>
+  </div>
+
+  <!-- filter buttons -->
+  <div>
+    <button class="filter-btn active" data-role="" onclick="filterMsgs('')">All</button>
+    <button class="filter-btn" data-role="patient" onclick="filterMsgs('patient')">Patient</button>
+    <button class="filter-btn" data-role="doctor" onclick="filterMsgs('doctor')">Doctor</button>
+  </div>
+
+  <!-- messages display -->
+  <div id="messages">
+    <p>Select a consultation above</p>
+  </div>
+
+  <!-- send message form (hidden until consultation selected) -->
+  <div id="sender-section" style="display:none">
+    <h3>Send Message</h3>
+    <p>Patient: <span id="patient-id"></span> | Doctor: <span id="doctor-id"></span></p>
+    <button onclick="pickSender('patient')">Send as Patient</button>
+    <button onclick="pickSender('doctor')">Send as Doctor</button>
+    <p id="selected-user"></p>
+  </div>
+
+  <div>
+    <input type="hidden" id="sender-id">
+    <input type="hidden" id="sender-role">
+    <textarea id="msg-text" rows="3" placeholder="Type message..."></textarea>
+    <button id="send-btn">Send</button>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
