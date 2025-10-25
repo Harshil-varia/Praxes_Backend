@@ -1,119 +1,124 @@
-const pool = require('../config/database.js');
+const pool = require('../config/database');
 
-const seedData = async () => {
+async function seedDatabase() {
   try {
-    // clear existing data
-    await pool.query('DELETE FROM messages');
-    await pool.query('DELETE FROM consultations');
-
-    // Example 1
-    const consult1 = await pool.query(
-      `INSERT INTO consultations (patient_id, doctor_id, status) 
-       VALUES ($1, $2, $3) RETURNING id`,
-      ['patient_123', 'doctor_456', 'active']
-    );
-
-    // Example 2
-    const consult2 = await pool.query(
-      `INSERT INTO consultations (patient_id, doctor_id, status) 
-       VALUES ($1, $2, $3) RETURNING id`,
-      ['patient_789', 'doctor_012', 'active']
-    );
-
-    const c1 = consult1.rows[0].id;
-    const c2 = consult2.rows[0].id;
-
-    // Example 3
-    await pool.query(
-      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at) 
-       VALUES ($1, $2, $3, $4)`,
-      [c1, 'patient_123', "Hi doctor, I've been having bad headaches for 3 days now", new Date(Date.now() - 30 * 60000)]
-    );
+    // Clear existing data
+    await pool.query('TRUNCATE TABLE messages, consultations CASCADE');
     
+    // Consultation 1: Headache discussion
+    const result1 = await pool.query(
+      `INSERT INTO consultations (patient_id, doctor_id, status)
+       VALUES ($1, $2, $3) RETURNING id`,
+      ['P123', 'D456', 'active']
+    );
+    const consult1 = result1.rows[0].id;
+
+    // Consultation 2: Random Medication side effects
+    const result2 = await pool.query(
+      `INSERT INTO consultations (patient_id, doctor_id, status)
+       VALUES ($1, $2, $3) RETURNING id`,
+      ['P789', 'D012', 'active']
+    );
+    const consult2 = result2.rows[0].id;
+
+    console.log('Created 2 consultations');
+
+    // Helper to create timestamps
+    const now = Date.now();
+    const minsAgo = (mins) => new Date(now - mins * 60000);
+
+    // Consultation 1 messages
     await pool.query(
-      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at) 
+      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at)
        VALUES ($1, $2, $3, $4)`,
-      [c1, 'doctor_456', "Can you describe the pain? Where exactly does it hurt?", new Date(Date.now() - 28 * 60000)]
+      [consult1, 'P123', "Hi doctor, I've been having really bad headaches the past few days", minsAgo(35)]
     );
 
     await pool.query(
-      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at) 
+      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at)
        VALUES ($1, $2, $3, $4)`,
-      [c1, 'patient_123', "It's behind my eyes mostly. Throbbing pain.", new Date(Date.now() - 25 * 60000)]
+      [consult1, 'D456', "Sorry to hear that. Can you describe the pain? Is it sharp, dull, or throbbing?", minsAgo(32)]
     );
 
     await pool.query(
-      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at) 
+      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at)
        VALUES ($1, $2, $3, $4)`,
-      [c1, 'doctor_456', "Are you sensitive to light? Any nausea?", new Date(Date.now() - 22 * 60000)]
+      [consult1, 'P123', "It's mostly throbbing, especially behind my eyes. Bright lights make it worse", minsAgo(28)]
     );
 
     await pool.query(
-      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at) 
+      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at)
        VALUES ($1, $2, $3, $4)`,
-      [c1, 'patient_123', "Yes light bothers me but no nausea", new Date(Date.now() - 20 * 60000)]
+      [consult1, 'D456', "That sounds like tension headaches, possibly migraines. Have you been more stressed than usual?", minsAgo(24)]
     );
 
     await pool.query(
-      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at) 
+      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at)
        VALUES ($1, $2, $3, $4)`,
-      [c1, 'doctor_456', "This sounds like migraine. Let's discuss treatment options.", new Date(Date.now() - 15 * 60000)]
-    );
-
-    // consultation 2 messages - medication side effects
-    await pool.query(
-      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at) 
-       VALUES ($1, $2, $3, $4)`,
-      [c2, 'patient_789', "Dr. Rodriguez, I started the blood pressure meds you prescribed", new Date(Date.now() - 40 * 60000)]
+      [consult1, 'P123', "Yeah actually, work has been intense. Also been on screens way more than normal", minsAgo(20)]
     );
 
     await pool.query(
-      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at) 
+      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at)
        VALUES ($1, $2, $3, $4)`,
-      [c2, 'doctor_012', "Good! How are you feeling so far?", new Date(Date.now() - 38 * 60000)]
+      [consult1, 'D456', "That's likely the culprit. Try ibuprofen and take regular screen breaks. If it persists past a week, let's follow up", minsAgo(16)]
+    );
+
+    // Consultation 2 messages
+    await pool.query(
+      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at)
+       VALUES ($1, $2, $3, $4)`,
+      [consult2, 'P789', "Morning doctor, quick question about the medication from last week", minsAgo(50)]
     );
 
     await pool.query(
-      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at) 
+      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at)
        VALUES ($1, $2, $3, $4)`,
-      [c2, 'patient_789', "I'm getting dizzy and feel tired all the time", new Date(Date.now() - 35 * 60000)]
+      [consult2, 'D012', "Good morning! What's going on with it?", minsAgo(47)]
     );
 
     await pool.query(
-      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at) 
+      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at)
        VALUES ($1, $2, $3, $4)`,
-      [c2, 'doctor_012', "How bad is the dizziness?", new Date(Date.now() - 32 * 60000)]
+      [consult2, 'P789', "I've been getting dizzy in the mornings. Is that expected?", minsAgo(43)]
     );
 
     await pool.query(
-      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at) 
+      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at)
        VALUES ($1, $2, $3, $4)`,
-      [c2, 'patient_789', "Pretty bad when I stand up quickly", new Date(Date.now() - 30 * 60000)]
+      [consult2, 'D012', "Dizziness can happen initially. How bad is it? Can you still get through your day?", minsAgo(39)]
     );
 
     await pool.query(
-      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at) 
+      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at)
        VALUES ($1, $2, $3, $4)`,
-      [c2, 'doctor_012', "That's a common side effect. Try standing up slowly and drink more water.", new Date(Date.now() - 25 * 60000)]
+      [consult2, 'P789', "It's manageable, just wobbly when I stand up. Usually passes in a minute", minsAgo(35)]
     );
 
     await pool.query(
-      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at) 
+      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at)
        VALUES ($1, $2, $3, $4)`,
-      [c2, 'patient_789', "Should I be worried about this?", new Date(Date.now() - 20 * 60000)]
+      [consult2, 'D012', "That's orthostatic hypotension - pretty common with this med. Stand up slower and drink more water. Should improve in a couple weeks", minsAgo(31)]
     );
 
     await pool.query(
-      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at) 
+      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at)
        VALUES ($1, $2, $3, $4)`,
-      [c2, 'doctor_012', "Usually it goes away after a week or two. Call me if you feel like you're going to faint.", new Date(Date.now() - 15 * 60000)]
+      [consult2, 'P789', "Okay good to know. Anything else I should watch for?", minsAgo(27)]
     );
 
-    console.log('Seeded:', c1, c2);
+    await pool.query(
+      `INSERT INTO messages (consultation_id, sender_id, message_text, sent_at)
+       VALUES ($1, $2, $3, $4)`,
+      [consult2, 'D012', "Monitor it, but if it worsens or you get chest pain or severe headaches, reach out immediately. Otherwise check in with me in 2 weeks", minsAgo(23)]
+    );
+
+    console.log('Seeded 14 messages across 2 consultations');
 
   } catch (err) {
-    console.error('Seed error:', err);
+    console.error('Seeding failed:', err.message);
+    throw err;
   }
-};
+}
 
-module.exports = seedData;
+module.exports = seedDatabase;

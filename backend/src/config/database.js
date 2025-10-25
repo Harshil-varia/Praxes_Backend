@@ -21,7 +21,7 @@ pool.on('connect',()=>{
 });
 
 // error call back fn.
-pool.on('error',()=>{
+pool.on('error',(err)=>{
     console.error('Database connection error:',err);
 });
 

@@ -1,28 +1,47 @@
-const { createMessage, getMessagesByConsultation, getConsultationById } = require('../models/messageModel');
+const {
+  createMessage,
+  getMessagesByConsultation,
+  getConsultationById
+} = require('../models/messageModel');
 
-// Send a new message
+// Send a message
 const sendMessage = async (req, res) => {
   try {
-    const { consultationId, authorId, authorRole, content } = req.body;
-    
-    // Verify consultation exists
+    const { consultationId, senderId, senderRole, content } = req.body;
+
+    // Check if consultation exists
     const consultation = await getConsultationById(consultationId);
-    if (!consultation) {
+    if (!consultation) { // check if consultation exists
       return res.status(404).json({
         error: 'Consultation not found'
       });
     }
-    
-    const newMessage = await createMessage(consultationId, authorId, authorRole, content);
+
+    // Verify sender is part of this consultation
+    if (senderId !== consultation.patientId && senderId !== consultation.doctorId) {
+      return res.status(403).json({
+        error: 'You are not part of this consultation'
+      });
+    }
+
+    // Test if selectedRole is the same as actualRole (patient!=doctor)
+    const actualRole = senderId === consultation.patientId ? 'patient' : 'doctor';
+    if (senderRole !== actualRole) {
+      return res.status(400).json({
+        error: `Role mismatch: you are a ${actualRole}, not a ${senderRole}`
+      });
+    }
+
+    const newMessage = await createMessage(consultationId, senderId, content);
     
     res.status(201).json({
-      status: 'success',
-      message: 'Message sent successfully',
+      success: true,
+      message: 'Message sent',
       data: newMessage
     });
-    
+
   } catch (error) {
-    console.error('Error sending message:', error);
+    console.error('Error in sendMessage:', error);
     res.status(500).json({
       error: 'Failed to send message'
     });
@@ -33,34 +52,31 @@ const sendMessage = async (req, res) => {
 const getMessages = async (req, res) => {
   try {
     const { consultationId } = req.params;
-    const { author_role } = req.query;
+    const { role } = req.query;
+
+    // Validate role filter if provided
+    if (role && !['patient', 'doctor'].includes(role)) {
+      return res.status(400).json({
+        error: 'Role must be either "patient" or "doctor"'
+      });
+    }
+
+    const messages = await getMessagesByConsultation(consultationId, role);
     
-    // Verify consultation exists
-    const consultation = await getConsultationById(consultationId);
-    if (!consultation) {
+    if (messages === null) {
       return res.status(404).json({
         error: 'Consultation not found'
       });
     }
-    
-    const messages = await getMessagesByConsultation(consultationId, author_role);
-    
+
     res.json({
-      status: 'success',
-      data: {
-        consultation: {
-          id: consultation.id,
-          patient_id: consultation.patient_id,
-          doctor_id: consultation.doctor_id,
-          status: consultation.status
-        },
-        messages: messages,
-        count: messages.length
-      }
+      success: true,
+      count: messages.length,
+      data: messages
     });
-    
+
   } catch (error) {
-    console.error('Error retrieving messages:', error);
+    console.error('Error in getMessages:', error);
     res.status(500).json({
       error: 'Failed to retrieve messages'
     });

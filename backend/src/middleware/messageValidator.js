@@ -1,25 +1,27 @@
 const validateMessage = (req, res, next) => {
-  const { consultationId, authorId, authorRole, content } = req.body;
-  
-  // validation required fields.
-  if (!consultationId || !authorId || !authorRole || !content) {
+  const { consultationId, senderId, senderRole, content } = req.body;
+
+  // Check all required fields are present
+  if (!consultationId || !senderId || !senderRole || !content) {
     return res.status(400).json({
-      error: 'Missing required fields: consultationId, authorId, authorRole, content'
+      error: 'Missing required fields: consultationId, senderId, senderRole, content'
     });
   }
-  
-  if (!['patient', 'doctor'].includes(authorRole)) {
+
+  // Validate role value
+  if (!['patient', 'doctor'].includes(senderRole)) {
     return res.status(400).json({
-      error: 'authorRole must be either "patient" or "doctor"'
+      error: 'senderRole must be either "patient" or "doctor"'
     });
   }
-  
-  if (content.trim().length === 0) {
+
+  // Check content isn't empty
+  if (typeof content !== 'string' || content.trim().length === 0) {
     return res.status(400).json({
       error: 'Message content cannot be empty'
     });
   }
-  
+
   next();
 };
 

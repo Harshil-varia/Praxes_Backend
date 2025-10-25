@@ -11,7 +11,31 @@ services:
       - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
+  backend:
+    build: ./backend
+    ports:
+      - '3001:3001'
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=telemed
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+    depends_on:
+      - db
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
 
+  frontend:
+    image: nginx:alpine
+    ports:
+      - '3000:80'
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:

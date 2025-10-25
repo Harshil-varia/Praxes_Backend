@@ -1,8 +1,8 @@
 const pool = require('../config/database');
 
-const setupDB = async () => {
+async function setupTables() {
   try {
-    // consultations table
+    // Consultations table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS consultations (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -14,38 +14,39 @@ const setupDB = async () => {
       )
     `);
 
-    // messages table
+    console.log('✓ Consultations table created');
+
+    // Messages table 
     await pool.query(`
       CREATE TABLE IF NOT EXISTS messages (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        consultation_id UUID NOT NULL,
+        consultation_id UUID NOT NULL REFERENCES consultations(id) ON DELETE CASCADE,
         sender_id VARCHAR(100) NOT NULL,
         message_text TEXT NOT NULL,
-        sent_at TIMESTAMP DEFAULT NOW()
+        sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
-    // add foreign key constraint only if it doesn't exist
+    console.log('✓ Messages table created');
+
+    
     await pool.query(`
-      DO $$ 
-      BEGIN
-        IF NOT EXISTS (
-          SELECT 1 FROM pg_constraint WHERE conname = 'fk_consultation_id'
-        ) THEN
-          ALTER TABLE messages 
-          ADD CONSTRAINT fk_consultation_id 
-          FOREIGN KEY (consultation_id) 
-          REFERENCES consultations(id) 
-          ON DELETE CASCADE;
-        END IF;
-      END $$;
+      CREATE INDEX IF NOT EXISTS idx_messages_consultation 
+      ON messages(consultation_id)
     `);
 
-    console.log("Database tables script finished");
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_messages_sent_at 
+      ON messages(sent_at DESC)
+    `);
+
+    console.log('✓ Indexes created');
+    console.log('Database setup complete');
+
   } catch (err) {
-    console.error("DB setup failed:", err);
+    console.error('Failed to create tables:', err.message);
     throw err;
   }
-};
+}
 
-module.exports = setupDB;
+module.exports = setupTables;
