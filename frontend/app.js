@@ -3,14 +3,73 @@ let consultId = null;
 let consultData = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-  loadConsults();
-  
   // wire up button handlers
   document.getElementById('load-btn').onclick = loadMessages;
   document.getElementById('send-btn').onclick = sendMsg;
   document.getElementById('consult-select').onchange = onConsultChange;
   document.getElementById('copy-id-btn').onclick = copyConsultId;
+  
+  // load consultations when page loads (but keep hidden)
+  loadConsults();
 });
+
+// toggle between create new or pick existing
+function toggleMode(mode) {
+  if (mode === 'create') {
+    document.getElementById('create-section').style.display = 'block';
+    document.getElementById('pick-section').style.display = 'none';
+  } else {
+    // switching to pick mode - reload consultations to get any new ones
+    loadConsults();
+    document.getElementById('create-section').style.display = 'none';
+    document.getElementById('pick-section').style.display = 'block';
+  }
+  
+  // hide everything else until they make a choice
+  document.getElementById('current-id-section').style.display = 'none';
+  document.getElementById('filter-section').style.display = 'none';
+  document.getElementById('sender-section').style.display = 'none';
+  document.getElementById('message-form').style.display = 'none';
+  document.getElementById('messages').innerHTML = '<p>Waiting for consultation selection...</p>';
+}
+
+// create new consultation
+async function createConsult() {
+  const patientId = document.getElementById('new-patient-id').value.trim();
+  const doctorId = document.getElementById('new-doctor-id').value.trim();
+  
+  if (!patientId || !doctorId) {
+    alert('Enter both patient and doctor IDs');
+    return;
+  }
+  
+  const res = await fetch('http://localhost:3001/api/consultations', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ patientId, doctorId })
+  });
+  
+  if (res.ok) {
+    const json = await res.json();
+    consultId = json.data.id;
+    consultData = {
+      patientId: json.data.patientId,
+      doctorId: json.data.doctorId
+    };
+    
+    // show the new consultation
+    showConsultation();
+    
+    // clear the form
+    document.getElementById('new-patient-id').value = '';
+    document.getElementById('new-doctor-id').value = '';
+    
+    alert('Consultation created! ID: ' + consultId);
+  } else {
+    const err = await res.json();
+    alert('Error: ' + err.error);
+  }
+}
 
 // grab all consultations from backend and populate dropdown
 async function loadConsults() {
@@ -18,6 +77,9 @@ async function loadConsults() {
   const data = await res.json();
   
   const select = document.getElementById('consult-select');
+  // clear existing options except the first one
+  select.innerHTML = '<option value="">-- Pick one --</option>';
+  
   data.consultations.forEach(c => {
     const opt = document.createElement('option');
     opt.value = c.id;
@@ -31,7 +93,7 @@ async function loadConsults() {
 
 function onConsultChange(e) {
   const selected = e.target.selectedOptions[0];
-  if (!selected) return;
+  if (!selected || !selected.value) return;
   
   consultId = selected.value;
   consultData = {
@@ -39,15 +101,26 @@ function onConsultChange(e) {
     doctorId: selected.dataset.doctorId
   };
   
+  showConsultation();
+}
+
+// show consultation details and enable messaging
+function showConsultation() {
   // show the consultation ID
   document.getElementById('current-id-section').style.display = 'block';
   document.getElementById('current-id').textContent = consultId;
   document.getElementById('copy-id-btn').style.display = 'inline-block';
   
-  // show the sender selection section once they pick a consultation
+  // show filters and sender section
+  document.getElementById('filter-section').style.display = 'block';
   document.getElementById('sender-section').style.display = 'block';
+  document.getElementById('message-form').style.display = 'block';
+  
   document.getElementById('patient-id').textContent = consultData.patientId;
   document.getElementById('doctor-id').textContent = consultData.doctorId;
+  
+  // auto-load messages
+  loadMessages();
 }
 
 function copyConsultId() {
@@ -85,7 +158,7 @@ async function loadMessages() {
   
   const container = document.getElementById('messages');
   if (!json.data || json.data.length === 0) {
-    container.innerHTML = '<p>No messages</p>';
+    container.innerHTML = '<p>No messages yet</p>';
     return;
   }
   
@@ -98,37 +171,13 @@ async function loadMessages() {
   `).join('');
 }
 
-async function createConsult() {
-  const patientId = document.getElementById('new-patient-id').value.trim();
-  const doctorId = document.getElementById('new-doctor-id').value.trim();
-  
-  if (!patientId || !doctorId) {
-    alert('Enter both patient and doctor IDs');
-    return;
-  }
-  
-  const res = await fetch('http://localhost:3001/api/consultations', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ patientId, doctorId })
-  });
-  
-  if (res.ok) {
-    alert('Consultation created!');
-    loadConsults(); // refresh the dropdown
-  } else {
-    const err = await res.json();
-    alert('Error: ' + err.error);
-  }
-}
-
 async function sendMsg() {
   const senderId = document.getElementById('sender-id').value;
   const senderRole = document.getElementById('sender-role').value;
   const text = document.getElementById('msg-text').value.trim();
   
   if (!senderId || !text) {
-    alert('Fill everything out');
+    alert('Pick who you are and type a message');
     return;
   }
   

@@ -6,16 +6,24 @@
 </head>
 <body>
   <h1>Telemedicine Consultation Messages</h1>
-  <!-- create new consultation?-->
+  
+  <!-- toggle between create new or pick existing -->
   <div>
-  <h3>Create New Consultation</h3>
-  <input type="text" id="new-patient-id" placeholder="Patient ID (e.g. P999)">
-  <input type="text" id="new-doctor-id" placeholder="Doctor ID (e.g. D888)">
-  <button onclick="createConsult()">Create</button>
-</div>
+    <label>What would you like to do?</label>
+    <button onclick="toggleMode('create')">Create New Consultation</button>
+    <button onclick="toggleMode('pick')">Use Existing Consultation</button>
+  </div>
+
+  <!-- create new consultation -->
+  <div id="create-section" style="display:none">
+    <h3>Create New Consultation</h3>
+    <input type="text" id="new-patient-id" placeholder="Patient ID (e.g. P999)">
+    <input type="text" id="new-doctor-id" placeholder="Doctor ID (e.g. D888)">
+    <button onclick="createConsult()">Create</button>
+  </div>
 
   <!-- consultation selector -->
-  <div>
+  <div id="pick-section" style="display:none">
     <label>Select Consultation:</label>
     <select id="consult-select">
       <option value="">-- Pick one --</option>
@@ -31,7 +39,7 @@
   </div>
 
   <!-- filter buttons -->
-  <div>
+  <div id="filter-section" style="display:none">
     <button class="filter-btn active" data-role="" onclick="filterMsgs('')">All</button>
     <button class="filter-btn" data-role="patient" onclick="filterMsgs('patient')">Patient</button>
     <button class="filter-btn" data-role="doctor" onclick="filterMsgs('doctor')">Doctor</button>
@@ -39,10 +47,10 @@
 
   <!-- messages display -->
   <div id="messages">
-    <p>Select a consultation above</p>
+    <p>Pick an option above to get started</p>
   </div>
 
-  <!-- send message form (hidden until consultation selected) -->
+  <!-- send message form -->
   <div id="sender-section" style="display:none">
     <h3>Send Message</h3>
     <p>Patient: <span id="patient-id"></span> | Doctor: <span id="doctor-id"></span></p>
@@ -51,7 +59,7 @@
     <p id="selected-user"></p>
   </div>
 
-  <div>
+  <div id="message-form" style="display:none">
     <input type="hidden" id="sender-id">
     <input type="hidden" id="sender-role">
     <textarea id="msg-text" rows="3" placeholder="Type message..."></textarea>
