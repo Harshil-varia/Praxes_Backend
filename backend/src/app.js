@@ -4,6 +4,7 @@ const pool = require('./config/database');
 const setupTables = require('./data/createTables');
 const seedDatabase = require('./data/seedData');
 const messageRoutes = require('./routes/messageRoutes');
+const consultationRoutes = require('./routes/consultationRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -14,6 +15,7 @@ app.use(express.json());
 
 // API routes
 app.use('/api', messageRoutes);
+app.use('/api', consultationRoutes); 
 
 // Basic health check
 app.get('/health', (req, res) => {

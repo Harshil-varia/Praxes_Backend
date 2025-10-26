@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('load-btn').onclick = loadMessages;
   document.getElementById('send-btn').onclick = sendMsg;
   document.getElementById('consult-select').onchange = onConsultChange;
+  document.getElementById('copy-id-btn').onclick = copyConsultId;
 });
 
 // grab all consultations from backend and populate dropdown
@@ -38,10 +39,27 @@ function onConsultChange(e) {
     doctorId: selected.dataset.doctorId
   };
   
+  // show the consultation ID
+  document.getElementById('current-id-section').style.display = 'block';
+  document.getElementById('current-id').textContent = consultId;
+  document.getElementById('copy-id-btn').style.display = 'inline-block';
+  
   // show the sender selection section once they pick a consultation
   document.getElementById('sender-section').style.display = 'block';
   document.getElementById('patient-id').textContent = consultData.patientId;
   document.getElementById('doctor-id').textContent = consultData.doctorId;
+}
+
+function copyConsultId() {
+  const idText = document.getElementById('current-id').textContent;
+  navigator.clipboard.writeText(idText).then(() => {
+    const btn = document.getElementById('copy-id-btn');
+    const originalText = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => {
+      btn.textContent = originalText;
+    }, 2000);
+  });
 }
 
 function pickSender(role) {
@@ -78,6 +96,30 @@ async function loadMessages() {
       <div>${m.messageText}</div>
     </div>
   `).join('');
+}
+
+async function createConsult() {
+  const patientId = document.getElementById('new-patient-id').value.trim();
+  const doctorId = document.getElementById('new-doctor-id').value.trim();
+  
+  if (!patientId || !doctorId) {
+    alert('Enter both patient and doctor IDs');
+    return;
+  }
+  
+  const res = await fetch('http://localhost:3001/api/consultations', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ patientId, doctorId })
+  });
+  
+  if (res.ok) {
+    alert('Consultation created!');
+    loadConsults(); // refresh the dropdown
+  } else {
+    const err = await res.json();
+    alert('Error: ' + err.error);
+  }
 }
 
 async function sendMsg() {

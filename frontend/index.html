@@ -6,7 +6,14 @@
 </head>
 <body>
   <h1>Telemedicine Consultation Messages</h1>
-  
+  <!-- create new consultation?-->
+  <div>
+  <h3>Create New Consultation</h3>
+  <input type="text" id="new-patient-id" placeholder="Patient ID (e.g. P999)">
+  <input type="text" id="new-doctor-id" placeholder="Doctor ID (e.g. D888)">
+  <button onclick="createConsult()">Create</button>
+</div>
+
   <!-- consultation selector -->
   <div>
     <label>Select Consultation:</label>
@@ -14,6 +21,13 @@
       <option value="">-- Pick one --</option>
     </select>
     <button id="load-btn">Load</button>
+    <button id="copy-id-btn" style="display:none">Copy ID</button>
+  </div>
+
+  <!-- show the current consultation ID -->
+  <div id="current-id-section" style="display:none">
+    <p><strong>Current Consultation ID:</strong></p>
+    <code id="current-id" style="background: #f0f0f0; padding: 5px; display: block; word-break: break-all;"></code>
   </div>
 
   <!-- filter buttons -->
