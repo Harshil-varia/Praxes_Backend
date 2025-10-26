@@ -24,22 +24,6 @@ Make sure you have these installed:
 
 That's it. Docker handles the database.
 
-## Project Layout
-
-praxes_backend/
-├── backend/ # API server
-│ ├── app.js # Entry point
-│ ├── config/ # DB connection
-│ ├── routes/ # API endpoints
-│ ├── controller/ # Request handlers
-│ ├── models/ # Database queries
-│ ├── middleware/ # Validation
-│ └── data/ # Schema + seed data
-├── frontend/ # Simple UI
-│ ├── index.html
-│ ├── app.js
-│ └── styles.css
-└── docker-compose.yml # Spins up everything
 
 
 ## Getting Started
